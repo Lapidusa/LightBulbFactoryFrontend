@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { money } from '../data/products.js';
-import { useCart } from '../context/CartContext.jsx';
+import { selectCartItems, selectCartTotal } from '../store/cartSlice.js';
+import { createOrder } from '../store/ordersSlice.js';
 
 const initialForm = {
   name: '',
@@ -35,7 +37,11 @@ function formatPhone(value) {
 }
 
 export default function CheckoutPage() {
-  const { cartItems, total, createOrder } = useCart();
+  const dispatch = useDispatch();
+  const cartItems = useSelector(selectCartItems);
+  const total = useSelector(selectCartTotal);
+  const orderStatus = useSelector((state) => state.orders.status);
+  const orderError = useSelector((state) => state.orders.error);
   const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
@@ -62,11 +68,13 @@ export default function CheckoutPage() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
     if (!validate()) return;
-    createOrder(form);
-    navigate('/confirmation');
+    const result = await dispatch(createOrder({ customer: form, items: cartItems }));
+    if (createOrder.fulfilled.match(result)) {
+      navigate('/confirmation');
+    }
   };
 
   return (
@@ -170,9 +178,12 @@ export default function CheckoutPage() {
             <textarea name="comment" value={form.comment} onChange={update} rows="4" />
           </label>
 
+          {orderError && <small>{orderError}</small>}
           <div className="form-actions">
             <Link to="/cart">Вернуться в корзину</Link>
-            <button type="submit">Подтвердить заказ</button>
+            <button type="submit" disabled={orderStatus === 'loading'}>
+              {orderStatus === 'loading' ? 'Отправляем...' : 'Подтвердить заказ'}
+            </button>
           </div>
         </form>
 

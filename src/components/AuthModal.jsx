@@ -1,7 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { fetchCurrentAdmin, loginAdmin, logoutAdmin } from '../store/authSlice.js';
 
 export default function AuthModal({ open, onClose }) {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { token, status, error } = useSelector((state) => state.auth);
+  const [form, setForm] = useState({ username: 'admin', password: 'admin123' });
+
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (event) => {
@@ -16,6 +24,22 @@ export default function AuthModal({ open, onClose }) {
   }, [open, onClose]);
 
   if (!open) return null;
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (token) {
+      await dispatch(logoutAdmin());
+      onClose();
+      navigate('/');
+      return;
+    }
+    const result = await dispatch(loginAdmin(form));
+    if (loginAdmin.fulfilled.match(result)) {
+      dispatch(fetchCurrentAdmin());
+      onClose();
+      navigate('/admin');
+    }
+  };
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -36,16 +60,39 @@ export default function AuthModal({ open, onClose }) {
           </button>
         </div>
 
-        <form className="auth-form" onSubmit={(event) => event.preventDefault()}>
-          <label>
-            Email
-            <input type="email" placeholder="mail@example.ru" autoComplete="email" />
-          </label>
-          <label>
-            Пароль
-            <input type="password" placeholder="Введите пароль" autoComplete="current-password" />
-          </label>
-          <button type="submit">Войти</button>
+        <form className="auth-form" onSubmit={submit}>
+          {token ? (
+            <p className="modal-copy">Вы уже вошли как администратор. Можно перейти в панель управления или выйти.</p>
+          ) : (
+            <>
+              <label>
+                Логин
+                <input
+                  value={form.username}
+                  onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
+                  autoComplete="username"
+                />
+              </label>
+              <label>
+                Пароль
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+                  autoComplete="current-password"
+                />
+              </label>
+            </>
+          )}
+          {error && <small>{error}</small>}
+          <button type="submit" disabled={status === 'loading'}>
+            {token ? 'Выйти' : status === 'loading' ? 'Входим...' : 'Войти'}
+          </button>
+          {token && (
+            <button type="button" className="secondary-button" onClick={() => { onClose(); navigate('/admin'); }}>
+              Открыть админку
+            </button>
+          )}
         </form>
       </section>
     </div>

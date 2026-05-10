@@ -1,20 +1,19 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { money, products } from '../data/products.js';
-import { useCart } from '../context/CartContext.jsx';
+import { money } from '../data/products.js';
+import { addToCart } from '../store/cartSlice.js';
+import { fetchCategories, fetchProducts } from '../store/productsSlice.js';
 
 const PAGE_SIZE = 8;
 
-function unique(field) {
-  return [...new Set(products.map((product) => product[field]))].sort();
-}
-
 export default function CatalogPage() {
-  const { addToCart } = useCart();
+  const dispatch = useDispatch();
+  const { items: products, categories, meta, status, error } = useSelector((state) => state.products);
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [filters, setFilters] = useState({
-    type: 'all',
+    categoryId: 'all',
     baseType: 'all',
     brand: 'all',
     wattage: 'all',
@@ -23,30 +22,38 @@ export default function CatalogPage() {
     sort: 'new',
   });
 
-  const filteredProducts = useMemo(() => {
-    const result = products.filter((product) => {
-      const temperatureGroup =
-        product.colorTemperature <= 3000 ? 'warm' : product.colorTemperature < 5000 ? 'neutral' : 'cold';
+  const query = useMemo(() => {
+    const temperature = filters.temperature === 'warm' ? 2700 : filters.temperature === 'neutral' ? 4000 : filters.temperature === 'cold' ? 6500 : undefined;
+    const sort = {
+      new: ['newest', 'desc'],
+      priceAsc: ['price', 'asc'],
+      priceDesc: ['price', 'desc'],
+      name: ['name', 'asc'],
+    }[filters.sort];
+    return {
+      category_id: filters.categoryId,
+      base_type: filters.baseType,
+      brand: filters.brand,
+      wattage: filters.wattage,
+      color_temperature: temperature,
+      max_price: filters.maxPrice,
+      sort_by: sort[0],
+      sort_order: sort[1],
+      page: 1,
+      page_size: visible,
+    };
+  }, [filters, visible]);
 
-      return (
-        (filters.type === 'all' || product.type === filters.type) &&
-        (filters.baseType === 'all' || product.baseType === filters.baseType) &&
-        (filters.brand === 'all' || product.brand === filters.brand) &&
-        (filters.wattage === 'all' || product.wattage <= Number(filters.wattage)) &&
-        (filters.temperature === 'all' || temperatureGroup === filters.temperature) &&
-        product.price <= Number(filters.maxPrice)
-      );
-    });
+  useEffect(() => {
+    dispatch(fetchCategories());
+  }, [dispatch]);
 
-    return [...result].sort((a, b) => {
-      if (filters.sort === 'priceAsc') return a.price - b.price;
-      if (filters.sort === 'priceDesc') return b.price - a.price;
-      if (filters.sort === 'name') return a.name.localeCompare(b.name);
-      return Number(b.isNew) - Number(a.isNew) || b.id - a.id;
-    });
-  }, [filters]);
+  useEffect(() => {
+    dispatch(fetchProducts(query));
+  }, [dispatch, query]);
 
-  const shownProducts = filteredProducts.slice(0, visible);
+  const baseTypes = useMemo(() => [...new Set(products.map((product) => product.baseType))].filter(Boolean).sort(), [products]);
+  const brands = useMemo(() => [...new Set(products.map((product) => product.brand))].filter(Boolean).sort(), [products]);
 
   const updateFilter = (name, value) => {
     setFilters((current) => ({ ...current, [name]: value }));
@@ -55,7 +62,7 @@ export default function CatalogPage() {
 
   const resetFilters = () => {
     setFilters({
-      type: 'all',
+      categoryId: 'all',
       baseType: 'all',
       brand: 'all',
       wattage: 'all',
@@ -73,13 +80,13 @@ export default function CatalogPage() {
           <p className="eyebrow">Каталог завода</p>
           <h1>Лампочки для дома, офиса и производства</h1>
           <p>
-            20 товарных позиций со статичными данными: фильтры, характеристики, остатки и полный путь до
+            Товары загружаются из backend-микросервиса: фильтры, характеристики, остатки и полный путь до
             оформления заказа.
           </p>
         </div>
         <div className="hero-stat">
-          <strong>{products.length}</strong>
-          <span>позиций в MVP-каталоге</span>
+          <strong>{meta.total || products.length}</strong>
+          <span>позиций из API</span>
         </div>
       </section>
 
@@ -94,11 +101,11 @@ export default function CatalogPage() {
           </div>
 
           <label>
-            Тип лампы
-            <select value={filters.type} onChange={(event) => updateFilter('type', event.target.value)}>
-              <option value="all">Все типы</option>
-              {unique('type').map((item) => (
-                <option key={item}>{item}</option>
+            Категория
+            <select value={filters.categoryId} onChange={(event) => updateFilter('categoryId', event.target.value)}>
+              <option value="all">Все категории</option>
+              {categories.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
               ))}
             </select>
           </label>
@@ -107,7 +114,7 @@ export default function CatalogPage() {
             Цоколь
             <select value={filters.baseType} onChange={(event) => updateFilter('baseType', event.target.value)}>
               <option value="all">Любой</option>
-              {unique('baseType').map((item) => (
+              {baseTypes.map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
@@ -117,7 +124,7 @@ export default function CatalogPage() {
             Бренд/серия
             <select value={filters.brand} onChange={(event) => updateFilter('brand', event.target.value)}>
               <option value="all">Все серии</option>
-              {unique('brand').map((item) => (
+              {brands.map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>
@@ -159,7 +166,7 @@ export default function CatalogPage() {
 
         <div className="catalog-content">
           <div className="catalog-toolbar">
-            <p>Найдено: {filteredProducts.length}</p>
+            <p>{status === 'loading' ? 'Загрузка...' : `Найдено: ${meta.total || products.length}`}</p>
             <label>
               Сортировка
               <select value={filters.sort} onChange={(event) => updateFilter('sort', event.target.value)}>
@@ -171,7 +178,15 @@ export default function CatalogPage() {
             </label>
           </div>
 
-          {shownProducts.length === 0 ? (
+          {status === 'failed' && (
+            <div className="empty-state">
+              <h2>Ошибка загрузки каталога</h2>
+              <p>{error}</p>
+              <button type="button" onClick={() => dispatch(fetchProducts(query))}>Повторить</button>
+            </div>
+          )}
+
+          {status !== 'failed' && products.length === 0 ? (
             <div className="empty-state">
               <h2>По выбранным фильтрам ничего не найдено</h2>
               <p>Сбросьте параметры или расширьте диапазон цены.</p>
@@ -179,15 +194,15 @@ export default function CatalogPage() {
             </div>
           ) : (
             <div className="product-grid">
-              {shownProducts.map((product) => (
+              {products.map((product) => (
                 <article className="product-card" key={product.id}>
-                  <Link to={`/products/${product.slug}`} className="product-image">
+                  <Link to={`/products/${product.id}`} className="product-image">
                     <img src={product.image} alt={product.name} />
                     {product.isNew && <span>Новинка</span>}
                   </Link>
                   <div className="product-card-body">
                     <p className="sku">{product.sku}</p>
-                    <Link to={`/products/${product.slug}`} className="product-name">
+                    <Link to={`/products/${product.id}`} className="product-name">
                       {product.name}
                     </Link>
                     <p>{product.shortDescription}</p>
@@ -198,7 +213,7 @@ export default function CatalogPage() {
                     </dl>
                     <div className="product-card-footer">
                       <strong>{money.format(product.price)}</strong>
-                      <button type="button" onClick={() => addToCart(product)} disabled={product.stockQty === 0}>
+                      <button type="button" onClick={() => dispatch(addToCart(product))} disabled={product.stockQty === 0}>
                         {product.stockQty > 0 ? 'В корзину' : 'Нет в наличии'}
                       </button>
                     </div>
@@ -208,7 +223,7 @@ export default function CatalogPage() {
             </div>
           )}
 
-          {visible < filteredProducts.length && (
+          {visible < (meta.total || 0) && (
             <button className="load-more" type="button" onClick={() => setVisible((value) => value + PAGE_SIZE)}>
               Показать еще
             </button>

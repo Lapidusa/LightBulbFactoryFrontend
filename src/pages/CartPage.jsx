@@ -1,11 +1,14 @@
 import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
 import { money } from '../data/products.js';
-import { useCart } from '../context/CartContext.jsx';
+import { removeFromCart, selectCartItems, selectCartTotal, updateQuantity } from '../store/cartSlice.js';
 
 export default function CartPage() {
-  const { cartItems, total, updateQuantity, removeFromCart } = useCart();
+  const dispatch = useDispatch();
+  const cartItems = useSelector(selectCartItems);
+  const total = useSelector(selectCartTotal);
 
   if (cartItems.length === 0) {
     return (
@@ -33,21 +36,21 @@ export default function CartPage() {
               <img src={product.image} alt={product.name} />
               <div>
                 <p className="sku">{product.sku}</p>
-                <Link to={`/products/${product.slug}`}>{product.name}</Link>
+                <Link to={`/products/${product.id}`}>{product.name}</Link>
                 <span>{money.format(product.price)} за шт.</span>
                 {quantity >= product.stockQty && <small>Доступный остаток: {product.stockQty} шт.</small>}
               </div>
               <div className="quantity-control" aria-label={`Количество ${product.name}`}>
-                <button type="button" onClick={() => updateQuantity(product.id, quantity - 1)} aria-label="Уменьшить">
+                <button type="button" onClick={() => dispatch(updateQuantity({ productId: product.id, quantity: quantity - 1 }))} aria-label="Уменьшить">
                   <Minus size={16} />
                 </button>
                 <input
                   value={quantity}
-                  onChange={(event) => updateQuantity(product.id, event.target.value)}
+                  onChange={(event) => dispatch(updateQuantity({ productId: product.id, quantity: event.target.value }))}
                   inputMode="numeric"
                   aria-label="Количество"
                 />
-                <button type="button" onClick={() => updateQuantity(product.id, quantity + 1)} aria-label="Увеличить">
+                <button type="button" onClick={() => dispatch(updateQuantity({ productId: product.id, quantity: quantity + 1 }))} aria-label="Увеличить">
                   <Plus size={16} />
                 </button>
               </div>
@@ -55,7 +58,7 @@ export default function CartPage() {
               <button
                 className="icon-button"
                 type="button"
-                onClick={() => removeFromCart(product.id)}
+                onClick={() => dispatch(removeFromCart(product.id))}
                 aria-label="Удалить позицию"
               >
                 <Trash2 size={18} />

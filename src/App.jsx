@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
-import { Link, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { Factory, ShoppingCart, User } from 'lucide-react';
-import { CartProvider, useCart } from './context/CartContext.jsx';
+import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Factory, LayoutDashboard, ShoppingCart, User } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import AuthModal from './components/AuthModal.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
+import { selectCartCount } from './store/cartSlice.js';
 import CatalogPage from './pages/CatalogPage.jsx';
 import ProductPage from './pages/ProductPage.jsx';
 import CartPage from './pages/CartPage.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
 import ConfirmationPage from './pages/ConfirmationPage.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
 
 function Header({ onAuthOpen }) {
-  const { itemsCount } = useCart();
+  const itemsCount = useSelector(selectCartCount);
+  const token = useSelector((state) => state.auth.token);
   const location = useLocation();
 
   return (
@@ -30,9 +33,15 @@ function Header({ onAuthOpen }) {
           <span>Корзина</span>
           {itemsCount > 0 && <b>{itemsCount}</b>}
         </NavLink>
+        {token && (
+          <NavLink to="/admin" className="cart-link">
+            <LayoutDashboard size={18} />
+            <span>Админка</span>
+          </NavLink>
+        )}
         <button type="button" className="login-button" onClick={onAuthOpen}>
           <User size={18} />
-          <span>Войти</span>
+          <span>{token ? 'Профиль' : 'Войти'}</span>
         </button>
       </nav>
     </header>
@@ -53,6 +62,7 @@ function AppRoutes() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/confirmation" element={<ConfirmationPage />} />
+          <Route path="/admin" element={<ProtectedAdmin><AdminPage /></ProtectedAdmin>} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
@@ -61,10 +71,11 @@ function AppRoutes() {
   );
 }
 
+function ProtectedAdmin({ children }) {
+  const token = useSelector((state) => state.auth.token);
+  return token ? children : <Navigate to="/" replace />;
+}
+
 export default function App() {
-  return (
-    <CartProvider>
-      <AppRoutes />
-    </CartProvider>
-  );
+  return <AppRoutes />;
 }

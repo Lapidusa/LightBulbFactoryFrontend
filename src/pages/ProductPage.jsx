@@ -1,20 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, Package } from 'lucide-react';
-import { money, products } from '../data/products.js';
-import { useCart } from '../context/CartContext.jsx';
+import { money } from '../data/products.js';
+import { addToCart } from '../store/cartSlice.js';
+import { clearSelectedProduct, fetchProduct } from '../store/productsSlice.js';
 
 export default function ProductPage() {
-  const { slug } = useParams();
-  const { addToCart } = useCart();
-  const product = products.find((item) => item.slug === slug);
+  const { slug: productId } = useParams();
+  const dispatch = useDispatch();
+  const { selected: product, selectedStatus, error } = useSelector((state) => state.products);
 
-  if (!product) {
+  useEffect(() => {
+    dispatch(fetchProduct(productId));
+    return () => dispatch(clearSelectedProduct());
+  }, [dispatch, productId]);
+
+  if (selectedStatus === 'loading' || selectedStatus === 'idle') {
+    return (
+      <div className="page narrow-page">
+        <div className="empty-state">
+          <h1>Загружаем товар</h1>
+          <p>Запрашиваем карточку из микросервиса товаров.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product || selectedStatus === 'failed') {
     return (
       <div className="page narrow-page">
         <div className="empty-state">
           <h1>Товар не найден</h1>
-          <p>Возможно, ссылка устарела или позиция скрыта из каталога.</p>
+          <p>{error || 'Возможно, ссылка устарела или позиция скрыта из каталога.'}</p>
           <Link className="button-link" to="/">Вернуться в каталог</Link>
         </div>
       </div>
@@ -61,7 +79,7 @@ export default function ProductPage() {
             <p className={product.stockQty > 0 ? 'stock in-stock' : 'stock out-stock'}>
               {product.stockQty > 0 ? `В наличии: ${product.stockQty} шт.` : 'Нет в наличии'}
             </p>
-            <button type="button" onClick={() => addToCart(product)} disabled={product.stockQty === 0}>
+            <button type="button" onClick={() => dispatch(addToCart(product))} disabled={product.stockQty === 0}>
               Добавить в корзину
             </button>
           </div>
