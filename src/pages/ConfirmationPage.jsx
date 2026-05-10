@@ -17,7 +17,7 @@ export default function ConfirmationPage() {
         <CheckCircle2 size={52} />
         <p className="eyebrow">Статус: {lastOrder.status || 'created'}</p>
         <h1>Заказ {lastOrder.order_number || lastOrder.orderNumber} оформлен</h1>
-        <p>Заказ создан через микросервис заказов и доступен по публичному номеру.</p>
+        <p>Заказ принят. Сохраните номер, чтобы уточнить статус обработки.</p>
 
         <div className="confirmation-list">
           {(lastOrder.items || []).map((item) => (

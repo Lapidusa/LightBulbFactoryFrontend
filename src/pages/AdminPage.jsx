@@ -95,7 +95,7 @@ export default function AdminPage() {
         <div>
           <p className="eyebrow">Панель управления</p>
           <h1>Админка магазина</h1>
-          <p>Товары и заказы загружаются через Admin Service.</p>
+          <p>Управление каталогом, остатками и заказами магазина.</p>
         </div>
         <button type="button" onClick={() => dispatch(logoutAdmin())}>
           <LogOut size={18} />
@@ -123,7 +123,7 @@ export default function AdminPage() {
         <div className="section-title">
           <div>
             <h2>Товары</h2>
-            <p>Поиск, создание, быстрые правки и удаление через backend.</p>
+            <p>Поиск, создание, быстрые правки и удаление товарных позиций.</p>
           </div>
           <button type="button" onClick={() => dispatch(fetchAdminProducts({ search: productSearch }))}>
             <RefreshCw size={16} />
@@ -199,7 +199,7 @@ export default function AdminPage() {
         <div className="section-title">
           <div>
             <h2>Заказы</h2>
-            <p>Список заказов и смена статуса через Admin Service.</p>
+            <p>Список заказов, фильтрация и смена статуса обработки.</p>
           </div>
           <button type="button" onClick={() => refreshOrders()}>
             <RefreshCw size={16} />

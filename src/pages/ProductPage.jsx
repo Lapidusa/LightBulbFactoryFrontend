@@ -21,7 +21,7 @@ export default function ProductPage() {
       <div className="page narrow-page">
         <div className="empty-state">
           <h1>Загружаем товар</h1>
-          <p>Запрашиваем карточку из микросервиса товаров.</p>
+          <p>Подготавливаем характеристики и наличие.</p>
         </div>
       </div>
     );

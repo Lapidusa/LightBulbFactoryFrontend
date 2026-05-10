@@ -71,7 +71,7 @@ export default function CartPage() {
           <h2>Итого</h2>
           <div><span>Товары</span><strong>{money.format(total)}</strong></div>
           <div><span>Доставка</span><strong>по выбору</strong></div>
-          <p>Остатки проверяются на mock-данных каталога.</p>
+          <p>Остатки проверяются по актуальному каталогу.</p>
           <Link className="button-link" to="/checkout">Оформить заказ</Link>
         </aside>
       </section>

@@ -80,13 +80,12 @@ export default function CatalogPage() {
           <p className="eyebrow">Каталог завода</p>
           <h1>Лампочки для дома, офиса и производства</h1>
           <p>
-            Товары загружаются из backend-микросервиса: фильтры, характеристики, остатки и полный путь до
-            оформления заказа.
+            Подберите лампы по типу, цоколю, характеристикам и наличию. Все готово для быстрого оформления заказа.
           </p>
         </div>
         <div className="hero-stat">
           <strong>{meta.total || products.length}</strong>
-          <span>позиций из API</span>
+          <span>позиций в каталоге</span>
         </div>
       </section>
 
