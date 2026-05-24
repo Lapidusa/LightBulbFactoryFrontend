@@ -2,7 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link, Navigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
-import { money } from '../data/products.js';
+import { money } from '../utils/formatters.js';
 
 export default function ConfirmationPage() {
   const lastOrder = useSelector((state) => state.orders.lastOrder);

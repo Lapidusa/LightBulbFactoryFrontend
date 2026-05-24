@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Minus, Plus, Trash2 } from 'lucide-react';
-import { money } from '../data/products.js';
+import { money } from '../utils/formatters.js';
 import { removeFromCart, selectCartItems, selectCartTotal, updateQuantity } from '../store/cartSlice.js';
 
 export default function CartPage() {

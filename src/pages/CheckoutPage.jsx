@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { money } from '../data/products.js';
+import { money } from '../utils/formatters.js';
 import { selectCartItems, selectCartTotal } from '../store/cartSlice.js';
 import { createOrder } from '../store/ordersSlice.js';
 

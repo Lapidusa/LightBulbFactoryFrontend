@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, Package } from 'lucide-react';
-import { money } from '../data/products.js';
+import { money } from '../utils/formatters.js';
 import { addToCart } from '../store/cartSlice.js';
 import { clearSelectedProduct, fetchProduct } from '../store/productsSlice.js';
 

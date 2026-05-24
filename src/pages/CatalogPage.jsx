@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
-import { money } from '../data/products.js';
+import { money } from '../utils/formatters.js';
 import { addToCart } from '../store/cartSlice.js';
 import { fetchCategories, fetchProducts } from '../store/productsSlice.js';
 

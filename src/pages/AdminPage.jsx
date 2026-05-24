@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { BarChart3, Boxes, LogOut, PackagePlus, RefreshCw, ShoppingBag } from 'lucide-react';
-import { money } from '../data/products.js';
+import { money } from '../utils/formatters.js';
 import { fixText } from '../api/client.js';
 import { fetchCurrentAdmin, logoutAdmin } from '../store/authSlice.js';
 import { fetchCategories } from '../store/productsSlice.js';
@@ -56,6 +56,13 @@ export default function AdminPage() {
     dispatch(fetchAdminOrders());
   }, [dispatch, token]);
 
+  useEffect(() => {
+    if (!categories[0]?.id) return;
+    setProductForm((current) => (
+      current.categoryId ? current : { ...current, categoryId: categories[0].id }
+    ));
+  }, [categories]);
+
   const dashboardCards = useMemo(
     () => [
       { label: 'Товары', value: dashboard?.products_count ?? products.length, icon: Boxes },
@@ -79,7 +86,12 @@ export default function AdminPage() {
 
   const submitProduct = async (event) => {
     event.preventDefault();
-    await dispatch(saveAdminProduct(productForm));
+    const product = {
+      ...productForm,
+      categoryId: productForm.categoryId || categories[0]?.id || '',
+    };
+    const result = await dispatch(saveAdminProduct(product));
+    if (!saveAdminProduct.fulfilled.match(result)) return;
     await dispatch(fetchDashboard());
     setProductForm({ ...emptyProduct, categoryId: categories[0]?.id || '' });
   };
@@ -149,7 +161,7 @@ export default function AdminPage() {
               <label>Артикул<input value={productForm.sku} onChange={(event) => updateProductForm('sku', event.target.value)} required /></label>
               <label>Название<input value={productForm.name} onChange={(event) => updateProductForm('name', event.target.value)} required /></label>
               <label>Slug<input value={productForm.slug} onChange={(event) => updateProductForm('slug', event.target.value)} required /></label>
-              <label>Категория<select value={productForm.categoryId || categories[0]?.id || ''} onChange={(event) => updateProductForm('categoryId', event.target.value)} required>
+              <label>Категория<select value={productForm.categoryId} onChange={(event) => updateProductForm('categoryId', event.target.value)} required>
                 <option value="">Выберите</option>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </select></label>

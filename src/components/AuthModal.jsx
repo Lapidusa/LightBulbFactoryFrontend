@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { fetchCurrentAdmin, loginAdmin, logoutAdmin } from '../store/authSlice.js';
+import { loginAdmin, logoutAdmin } from '../store/authSlice.js';
 
 export default function AuthModal({ open, onClose }) {
   const dispatch = useDispatch();
@@ -35,7 +35,6 @@ export default function AuthModal({ open, onClose }) {
     }
     const result = await dispatch(loginAdmin(form));
     if (loginAdmin.fulfilled.match(result)) {
-      dispatch(fetchCurrentAdmin());
       onClose();
       navigate('/admin');
     }
